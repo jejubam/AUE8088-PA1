@@ -16,6 +16,39 @@ from src.metric import MyAccuracy, MyF1Score
 import src.config as cfg
 from src.util import show_setting
 
+from torchvision.models import efficientnet_b0
+import torch.nn.functional as F
+
+class EfficientNetWithCustomSkip(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.efficientnet = efficientnet_b0(weights=None)
+        self.efficientnet.features[0][0] = nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1, bias=False)
+        
+        self.custom_layer = nn.Sequential(
+            nn.Conv2d(24, 1280, kernel_size=1),
+            nn.BatchNorm2d(1280),
+            nn.ReLU()
+        )
+
+    def forward(self, x):
+        skip_connection = None
+        for idx, layer in enumerate(self.efficientnet.features):
+            x = layer(x)
+            if idx == 2:
+                skip_connection = x
+
+        if skip_connection is not None:
+            skip_connection = self.custom_layer(skip_connection)
+            skip_connection = F.interpolate(skip_connection, size=x.shape[2:])
+            x = x + skip_connection
+
+        x = self.efficientnet.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.efficientnet.classifier(x)
+
+        return x
+
 class MyNetwork(AlexNet):
     def __init__(self, num_classes: int = 200, dropout: float = 0.5) -> None:
         super().__init__()
@@ -25,14 +58,14 @@ class MyNetwork(AlexNet):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128),
+            nn.BatchNorm2d(128), # Batch - Normalization Layer 추가
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.BatchNorm2d(256),
+            nn.BatchNorm2d(256), # Batch - Normalization Layer 추가
             nn.ReLU(inplace=True),
             nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.BatchNorm2d(256),
+            nn.BatchNorm2d(256), # Batch - Normalization Layer 추가
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
         )
@@ -57,7 +90,6 @@ class MyNetwork(AlexNet):
         x = self.classifier(x)
         return x
 
-
 class SimpleClassifier(LightningModule):
     def __init__(self,
                  model_name: str = 'resnet18',
@@ -70,6 +102,8 @@ class SimpleClassifier(LightningModule):
         # Network
         if model_name == 'MyNetwork':
             self.model = MyNetwork()
+        elif model_name == 'Myefficient':
+            self.model = EfficientNetWithCustomSkip()
         else:
             models_list = models.list_models()
             assert model_name in models_list, f'Unknown model name: {model_name}. Choose one from {", ".join(models_list)}'

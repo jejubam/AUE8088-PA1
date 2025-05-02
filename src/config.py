@@ -2,26 +2,16 @@ import os
 
 # Training Hyperparameters
 NUM_CLASSES         = 200
-BATCH_SIZE          = 2048
+BATCH_SIZE          = 512
 VAL_EVERY_N_EPOCH   = 1
 
 NUM_EPOCHS          = 40
-# OPTIMIZER_PARAMS    = {'type': 'AdamW', 'lr': 0.005, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay' : 0}
-OPTIMIZER_PARAMS    = {'type': 'SGD', 'lr': 0.005, 'momentum': 0.9}
-# SCHEDULER_PARAMS    = {'type': 'MultiStepLR', 'milestones': [60, 90], 'gamma': 0.2}
-SCHEDULER_PARAMS    = {
-    'type': 'CosineAnnealingWarmRestarts',
-    'T_0': 10,  # Number of iterations for the first restart
-    'T_mult': 2,  # A factor increases T_i after a restart
-    'eta_min': 0, # Minimum learning rate
-}
-
-# SCHEDULER_PARAMS = {
-#     'type': 'CyclicLR',
-#     'base_lr': 0.001,
-#     'max_lr': 0.01,
-#     'step_size_up': 20,
-#     'mode': 'triangular'
+# OPTIMIZER_PARAMS    = {'type': 'AdamW', 'lr': 1e-4, 'weight_decay' : 0.001}
+OPTIMIZER_PARAMS    = {'type': 'SGD', 'lr': 0.01, 'momentum': 0.9}
+SCHEDULER_PARAMS    = {'type': 'MultiStepLR', 'milestones': [30, 35], 'gamma': 0.2}
+# SCHEDULER_PARAMS    = {
+#     'type': 'CosineAnnealingWarmRestarts',
+#     'T_0': 80,  # Number of iterations for the first restart
 # }
 
 # Dataaset
@@ -37,7 +27,11 @@ IMAGE_MEAN          = [0.4802, 0.4481, 0.3975]
 IMAGE_STD           = [0.2302, 0.2265, 0.2262]
 
 # Network
-MODEL_NAME          = 'resnet18'
+# MODEL_NAME          = 'efficientnet_b0'
+# MODEL_NAME          = 'resnet101'
+MODEL_NAME          = 'Myefficient'
+# MODEL_NAME          = 'convnext_base'
+# MODEL_NAME          = 'MyNetwork'
 
 # Compute related
 ACCELERATOR         = 'gpu'
