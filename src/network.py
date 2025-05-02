@@ -16,14 +16,38 @@ from src.metric import MyAccuracy, MyF1Score
 import src.config as cfg
 from src.util import show_setting
 
-
-# [TODO: Optional] Rewrite this class if you want
 class MyNetwork(AlexNet):
-    def __init__(self):
+    def __init__(self, num_classes: int = 200, dropout: float = 0.5) -> None:
         super().__init__()
-
-        # [TODO] Modify feature extractor part in AlexNet
-
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=5, stride=2, padding=2), # 이미지가 작은 Tiny-Imagenet에서 보다 작은 kernel size 도입
+            nn.BatchNorm2d(64),  # Batch - Normalization Layer 추가
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+        )
+        
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=dropout),
+            nn.Linear(256 * 1 * 1, 1024),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=dropout),
+            nn.Linear(1024, 1024),
+            nn.ReLU(inplace=True),
+            nn.Linear(1024, num_classes),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # [TODO: Optional] Modify this as well if you want
