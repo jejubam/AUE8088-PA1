@@ -16,6 +16,8 @@ import src.config as cfg
 
 torch.set_float32_matmul_precision('medium')
 
+import wandb
+wandb.init(entity="donguk0513", project="AUE8088-PA1", name=cfg.WANDB_NAME)
 
 if __name__ == "__main__":
 
